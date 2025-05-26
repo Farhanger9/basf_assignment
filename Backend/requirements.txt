@@ -1,0 +1,12 @@
+flask
+flask-cors
+
+python-dotenv
+
+azure-ai-textanalytics
+azure-cognitiveservices-speech
+
+psycopg2-binary
+sqlalchemy
+
+openai

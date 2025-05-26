@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sentiment_db
+    restart: always
+    environment:
+      POSTGRES_DB: sentiment
+      POSTGRES_USER: sentiment_user
+      POSTGRES_PASSWORD: sentiment_pass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [appnet]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sentiment_backend
+    env_file: backend/.env.prod
+    environment:
+      DATABASE_URL: postgresql://sentiment_user:sentiment_pass@db:5432/sentiment
+    depends_on: [db]
+    networks: [appnet]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: sentiment_frontend
+    ports:
+      - "80:80"
+    depends_on: [backend]
+    networks: [appnet]
+
+volumes:
+  postgres-data:
+
+networks:
+  appnet:

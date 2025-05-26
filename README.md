@@ -1,64 +1,73 @@
 # Sentiment-Feedback App
 
-A full-stack application that lets users enter free-text feedback, automatically:
+## Overview
 
-1. Detects sentiment & key phrases with **Azure Cognitive Services**  
-2. Generates a short AI reply with **OpenAI GPT-3.5**  
-3. Stores everything in **PostgreSQL**  
-4. (Optional) Returns an MP3 reply via Azure Text-to-Speech
+A full-stack application that automatically analyzes user feedback by:
 
-| Folder | Stack | Purpose |
-| ------ | ----- | ------- |
-| **`frontend/`** | React 19 · Vite · MUI | Collect feedback & list past analyses |
-| **`backend/`**  | Python 3.11 · Flask | Sentiment, GPT reply, TTS, persistence |
+- Detecting sentiment & key phrases with **Azure Cognitive Services**
+- Generating AI responses with **OpenAI GPT-3.5**
+- Storing all data in **PostgreSQL**
+- Optionally converting responses to audio via **Azure Text-to-Speech**
 
-> **No CI/CD yet.**  
-> The roadmap (bottom) shows planned automation.
+## Tech Stack
+
+| Component | Technologies |
+|-----------|--------------|
+| **Frontend** | React 19 · Vite · Material-UI |
+| **Backend** | Python 3.11 · Flask |
+| **Services** | Azure Cognitive Services · OpenAI · PostgreSQL |
 
 ---
 
-## Quick Start (local)
+## Quick Start Guide
 
-### Requirements
+### Prerequisites
 
-| Tool | Version |
-|------|---------|
-| Node | ≥ 18 |
-| npm  | ≥ 9 |
+| Requirement | Version |
+|-------------|---------|
+| Node.js | ≥ 18 |
+| npm | ≥ 9 |
 | Python | ≥ 3.10 |
-| PostgreSQL | 13 + |
-| Azure Cognitive Services | Text-Analytics & Speech |
+| PostgreSQL | ≥ 13 |
+| Azure Cognitive Services | Text Analytics & Speech |
 | OpenAI | API key |
 
-```bash
+### Installation
+
+```
 git clone <YOUR-REPO-URL> sentiment-feedback
 cd sentiment-feedback
-1 · Backend
-bash
-Copy
-Edit
+```
+
+### Backend Setup
+
+```
 cd backend
 python -m venv venv           # Windows: py -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env          # add your own secrets
-flask --app app run           # http://127.0.0.1:5000
-backend/.env.example
+cp .env.example .env          # Configure with your API keys
+flask --app app run           # Runs on http://127.0.0.1:5000
+```
 
-dotenv
-Copy
-Edit
+#### Environment Configuration
+
+Create a `.env` file with the following variables:
+
+```
 AZURE_ENDPOINT=
 AZURE_API_KEY=
 AZURE_SPEECH_KEY=
 AZURE_SPEECH_REGION=
 DATABASE_URL=postgresql://user:pass@host:port/db
 OPENAI_API_KEY=
-Create the table once:
+```
 
-sql
-Copy
-Edit
+#### Database Initialization
+
+Execute the following SQL once to create the required table:
+
+```
 CREATE TABLE IF NOT EXISTS sentiment_analysis (
   id              SERIAL PRIMARY KEY,
   feedback        TEXT        NOT NULL,
@@ -66,64 +75,80 @@ CREATE TABLE IF NOT EXISTS sentiment_analysis (
   audio_file_path TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-2 · Frontend
-bash
-Copy
-Edit
+```
+
+### Frontend Setup
+
+```
 cd ../frontend
 npm install
-npm run dev         # http://localhost:5173
-The React app expects the API at http://127.0.0.1:5000.
-Change API_URL constants in src/components/SubmitFeedback.jsx and ViewFeedback.jsx if necessary.
+npm run dev         # Runs on http://localhost:5173
+```
 
-Project Structure
-bash
-Copy
-Edit
+> **Note:** The React app expects the API at `http://127.0.0.1:5000`. To change this, update the `API_URL` constants in `src/components/SubmitFeedback.jsx` and `ViewFeedback.jsx`.
+
+## Project Structure
+
+```
 backend/
-├── app.py
-├── routes/azure_routes.py
+├── app.py                             # Flask application entry point
+├── routes/azure_routes.py             # API route definitions
 ├── services/
-│   ├── azure_cognitive.py
-│   └── open_ai_service.py
-├── repository/sentiment_repository.py
-├── db.py
-└── requirements.txt
+│   ├── azure_cognitive.py             # Sentiment analysis logic
+│   └── open_ai_service.py             # GPT integration
+├── repository/sentiment_repository.py # Database operations
+├── db.py                              # Database connection
+└── requirements.txt                   # Python dependencies
 
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── SubmitFeedback.jsx
-│   │   └── ViewFeedback.jsx
-│   ├── App.jsx
-│   └── main.jsx
-└── vite.config.js
-API Endpoints
-Verb	Endpoint	Body / Query	Response (200)
-POST	/analyze	{ "content": "Great job!" }	AI reply + sentiment JSON
-GET	/feedbacks?limit=20&offset=0	–	List of analyses
-GET	/output_audio/<filename>	–	audio/mpeg stream
+│   │   ├── SubmitFeedback.jsx         # Feedback submission form
+│   │   └── ViewFeedback.jsx           # Feedback history display
+│   ├── App.jsx                        # Main React component
+│   └── main.jsx                       # Application entry point
+└── vite.config.js                     # Vite configuration
+```
 
-Error format: { "error": "message" }.
+## API Reference
 
-Scripts
-Frontend
-Command	Action
-npm run dev	Start Vite dev server
-npm run build	Production build to dist/
-npm run lint	ESLint
+| Method | Endpoint | Request Body / Query | Response (200) |
+|--------|----------|---------------------|----------------|
+| POST | `/analyze` | `{ "content": "Great job!" }` | AI reply + sentiment analysis JSON |
+| GET | `/feedbacks?limit=20&offset=0` | - | List of analysis results |
+| GET | `/output_audio/<filename>` | - | Audio/mpeg stream |
 
-Backend
-Command	Action
-make run or flask --app app run	Start Flask
-make install	Install Python dependencies
+Error responses follow the format: `{ "error": "message" }`.
 
-Deployment Notes
-Backend: Serve with Gunicorn →
+## Scripts
+
+### Frontend
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite development server |
+| `npm run build` | Create production build in `dist/` |
+| `npm run lint` | Run ESLint |
+
+### Backend
+
+| Command | Description |
+|---------|-------------|
+| `make run` or `flask --app app run` | Start Flask server |
+| `make install` | Install Python dependencies |
+
+## Deployment Guidelines
+
+### Backend
+Serve with Gunicorn:
+```bash
 gunicorn -w 4 -b 0.0.0.0:8000 'app:create_app()'
+```
 
-Frontend: npm run build and serve frontend/dist with Nginx, Netlify, Vercel, etc.
+### Frontend
+Run `npm run build` and serve the `frontend/dist` directory using Nginx, Netlify, Vercel, or similar.
 
-Secrets: keep all keys in environment variables—never commit to Git.
-
-CORS: default wildcard in dev; restrict origins in prod.
+### Security Considerations
+- Store all API keys and credentials as environment variables
+- Never commit sensitive information to Git
+- CORS: Use wildcard (`*`) for development only; restrict origins in production
